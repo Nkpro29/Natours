@@ -2,9 +2,20 @@ import Tour from '../models/tourModel.js';
 
 const getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    //filtering , sorting , limiting, pagination, aliasing
+
+    
+    const queryObj = { ...req.query };
+    const excludedFields = ['page', 'limit', 'sort', 'fields'];
+    excludedFields.forEach((el) => {
+      delete queryObj[el];
+    });
+
+    const tours = await Tour.find(queryObj);
+
     res.status(200).json({
       status: 'success',
+      resultLength: tours.length,
       data: {
         tours: tours,
       },
