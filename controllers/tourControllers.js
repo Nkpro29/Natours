@@ -197,8 +197,50 @@ const getToursStats = async (req, res) => {
   }
 };
 
+const getMonthlyPlan = async (req, res) => {
+  try {
+    const year = req.params.year * 1;
+    const monthlyPlan = await Tour.aggregate([
+      {
+        $unwind: '$startDates',
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' },
+          numTourStarts: { $sum: 1 },
+          tour: { $push: '$name' },
+        },
+      },
+      {
+        $sort: { numTourStarts: -1 },
+      },
+      {
+        $addFields: { month: '$_id' },
+      },
+    ]);
+    res.status(200).json({
+      status: 'success',
+      monthlyPlan: monthlyPlan,
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'failure',
+      message: error.message,
+    });
+  }
+};
+
 export default {
   getToursStats,
+  getMonthlyPlan,
   aliasTopTours,
   getAllTours,
   getTour,
