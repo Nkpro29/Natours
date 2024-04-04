@@ -92,7 +92,6 @@ const getAllTours = async (req, res) => {
 
 const getTour = async (req, res) => {
   try {
-    console.log('req.params ==>', req.params.tourId);
     const tour = await Tour.findById(req.params.tourId);
     //Tour.findOne({_id: req.params.tourId})
     res.status(200).json({
