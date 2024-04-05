@@ -1,4 +1,5 @@
 import Tour from '../models/tourModel.js';
+import APIFeatures from '../utils/apiFeatures.js';
 
 const aliasTopTours = (req, res, next) => {
   console.log('inside aliasTopTours');
@@ -9,60 +10,12 @@ const aliasTopTours = (req, res, next) => {
   next();
 };
 
-class APIFeatures {
-  constructor(query, queryString) {
-    this.query = query;
-    this.queryString = queryString;
-  }
-  filter() {
-    const queryObj = { ...this.queryString };
-    const excludedFields = ['page', 'limit', 'sort', 'fields'];
-    excludedFields.forEach((el) => {
-      delete queryObj[el];
-    });
-
-    const queryStr = JSON.stringify(queryObj);
-    let outputStr = queryStr.replace(
-      /\b(gte|gt|lte|lt)\b/g,
-      (match) => `$${match}`
-    );
-    // console.log("outputStr ==>",JSON.parse(outputStr));
-    this.query = Tour.find(JSON.parse(outputStr));
-
-    return this;
-  }
-
-  sort() {
-    if (this.queryString.sort) {
-      const sortBy = this.queryString.sort.split(',').join(' ');
-      this.query = this.query.sort(sortBy);
-      console.log('sortBy ==>', sortBy);
-    } else {
-      this.query = this.query.sort('-createdAt');
-    }
-
-    return this;
-  }
-
-  limitFields() {
-    if (this.queryString.fields) {
-      const fields = this.queryString.fields.split(',').join(' ');
-      this.query = this.query.select(fields);
-    } else {
-      this.query = this.query.select('-__v');
-    }
-    return this;
-  }
-  pagination() {
-    const page = this.queryString.page * 1 || 1;
-    const limit = this.queryString.limit * 1 || 10;
-    const skipValue = (page - 1) * limit;
-
-    this.query = this.query.skip(skipValue).limit(limit);
-
-    return this;
-  }
-}
+//error handler
+const catchAsync = (fn) => {
+  return (req, res, next) => {
+    fn(req, res, next).catch((error) => next(error));
+  };
+};
 
 const getAllTours = async (req, res) => {
   console.log('Get Tour hit==>');
@@ -108,22 +61,15 @@ const getTour = async (req, res) => {
   }
 };
 
-const createTour = async (req, res) => {
-  try {
-    const newTour = await Tour.create(req.body);
-    res.status(200).json({
-      status: 'success',
-      data: {
-        tour: newTour,
-      },
-    });
-  } catch (error) {
-    res.status(400).json({
-      status: 'failure',
-      error: error,
-    });
-  }
-};
+const createTour = catchAsync(async (req, res) => {
+  const newTour = await Tour.create(req.body);
+  res.status(200).json({
+    status: 'success',
+    data: {
+      tour: newTour,
+    },
+  });
+});
 
 const updateTour = async (req, res) => {
   try {
@@ -225,7 +171,7 @@ const getMonthlyPlan = async (req, res) => {
         $addFields: { month: '$_id' },
       },
     ]);
-    res.status(200).json({  
+    res.status(200).json({
       status: 'success',
       responseLength: monthlyPlan.length,
       monthlyPlan: monthlyPlan,
