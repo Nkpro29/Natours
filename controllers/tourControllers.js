@@ -1,6 +1,7 @@
 import Tour from '../models/tourModel.js';
 import APIFeatures from '../utils/apiFeatures.js';
 import AppError from '../utils/appError.js';
+import catchAsync from '../utils/catchAsync.js';
 
 const aliasTopTours = (req, res, next) => {
   console.log('inside aliasTopTours');
@@ -11,12 +12,6 @@ const aliasTopTours = (req, res, next) => {
   next();
 };
 
-//error handler
-const catchAsync = (fn) => {
-  return (req, res, next) => {
-    fn(req, res, next).catch((error) => next(error));
-  };
-};
 
 const getAllTours = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(Tour.find(), req.query)
