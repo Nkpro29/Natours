@@ -4,6 +4,7 @@ import userController from '../controllers/userControllers.js';
 import authController from '../controllers/authController.js';
 
 router.route('/signup').post(authController.signup);
+router.route('/login').get(authController.login);
 
 router
   .route('/')
