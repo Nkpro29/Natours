@@ -2,6 +2,7 @@ import User from '../models/userModel.js';
 import catchAsync from '../utils/catchAsync.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import AppError from '../utils/appError.js';
 
 const signup = catchAsync(async (req, res) => {
   const newUser = await User.create({
@@ -22,27 +23,22 @@ const signup = catchAsync(async (req, res) => {
   });
 });
 
-const login = catchAsync(async (req, res) => {
+const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (!user) {
-    return res.status(401).json({
-      status: 'failure',
-      message: 'user not exist. please signup first.',
-    });
+    next(new AppError(`user doesn't exist.`, 401));
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    return res.status(401).json({
-      status: 'failure',
-      message: 'entered password is not valid.',
-    });
+    next(new AppError(`incorrect password.`, 401));
   }
 
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPRIRES_IN,
   });
+
   res.status(200).json({
     status: 'success',
     token: token,
