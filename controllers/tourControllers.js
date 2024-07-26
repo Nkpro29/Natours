@@ -13,7 +13,7 @@ const aliasTopTours = (req, res, next) => {
 };
 
 
-const getAllTours = catchAsync(async (req, res, next) => {
+const getAllTours = catchAsync(async (req, res) => {
   const features = new APIFeatures(Tour.find(), req.query)
     .filter()
     .sort()

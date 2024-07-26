@@ -44,6 +44,38 @@ const login = catchAsync(async (req, res, next) => {
     token: token,
     data: user,
   });
+
+  // next();
 });
 
-export default { signup, login };
+const protect = catchAsync(async (req, res, next) => {
+  //getting token and check of it's there
+
+  let token;
+
+  console.log("req.headers ==> ",req.headers)
+
+  if(req.headers.authorization && req.headers.authorization.startsWith('Bearer ')){
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if(!token){
+    return next(new AppError(`First login to the page to access the tours.`));
+  }
+
+  const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+
+  //check if user still exists
+  const freshUser = await User.findById(decodedToken.id );
+  if(!freshUser){
+    return (new AppError('The user no longer exists.', 401));
+  }
+
+  
+
+  console.log("token ==>",token);
+
+  next();  
+});
+
+export default { signup, login, protect };
